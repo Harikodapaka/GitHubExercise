@@ -1,0 +1,10 @@
+<h1 mat-dialog-title>Loin with Personal Access Token</h1>
+<div mat-dialog-content>
+  <p>Enter your GitHub Personal Access Token below..</p>
+  <mat-form-field>
+    <input matInput [(ngModel)]="data.token">
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+    <button mat-button [mat-dialog-close]="data.token" cdkFocusInitial>Ok</button>
+</div>

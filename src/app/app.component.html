@@ -1,23 +1,31 @@
+<div class="col-12 header row">
+  <h3 style="margin-top:0.3em;" class="col-11"> My GitHub Favorites</h3>
+  <p class="login" *ngIf="!authService.isUserLoggedIn()" (click)="showLoginWindow()">Login</p>
+</div>
+<ng-progress [positionUsing]="'marginLeft'" [direction]="'leftToRightIncreased'" [color]="'#f48024'" [trickleSpeed]="500"
+  [showSpinner]="true" [thick]="true" [ease]="'easeInSine'"></ng-progress>
 <div class="container-fluid">
-  <div class="row mt-4">
+  <div class="row" style="margin-top: 5em;">
     <div class="col-4">
       <mat-form-field appearance="outline" class="col-12">
         <mat-label>Search</mat-label>
-        <input matInput [(ngModel)]="searchInput" placeholder="Enter somethign to search">
+        <input matInput [formControl]="search" (keyup.enter)="searchRepos()" placeholder="Enter something to search" required>
+        <mat-error *ngIf="search.invalid">This field is required</mat-error>
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
     </div>
     <div class="col-8">
       <button mat-stroked-button color="accent" class="col-2 m-3" (click)="searchRepos()">Search</button>
       <button mat-stroked-button color="warn" class="col-2 m-3" (click)="resetrepos()">Reset</button>
+      <button mat-stroked-button color="warn" class="col-2 m-3" (click)="getFavoritesList()">Load Favourites</button>
     </div>
   </div>
 
   <div class="row">
     <div class="col-6">
-        <span>Search Results</span>
+      <span>Search Results</span>
       <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 mt-3" style="width: 100%">
-        <ng-container matColumnDef="full_name">
+        <ng-container matColumnDef="full_name" style="width: 30em;">
           <th mat-header-cell *matHeaderCellDef> Name </th>
           <td mat-cell *matCellDef="let element"> {{element.full_name || "-"}} </td>
         </ng-container>
@@ -35,7 +43,9 @@
         <ng-container matColumnDef="action">
           <th mat-header-cell *matHeaderCellDef> Action </th>
           <td mat-cell *matCellDef="let element">
-            <button>add</button>
+            <button *ngIf="!element.isStarredRepo" mat-mini-fab matTooltip="Add to Favorites" color="primary" (click)="addToFavourite(element)">
+                <mat-icon aria-label="Example icon-button with a heart icon">add</mat-icon>
+            </button>
           </td>
         </ng-container>
 
@@ -44,9 +54,9 @@
       </table>
     </div>
     <div class="col-6">
-        <span>Favourate Repos</span>
-      <table mat-table [dataSource]="dataSource" class="mat-elevation-z8 mt-3" style="width: 100%">
-        <ng-container matColumnDef="full_name">
+      <span>Favourite Repos</span>
+      <table mat-table [dataSource]="favouratesDataSource" class="mat-elevation-z8 mt-3" style="width: 100%">
+        <ng-container matColumnDef="full_name" style="width: 30em;">
           <th mat-header-cell *matHeaderCellDef> Name </th>
           <td mat-cell *matCellDef="let element"> {{element.full_name || "-"}} </td>
         </ng-container>
@@ -64,7 +74,9 @@
         <ng-container matColumnDef="action">
           <th mat-header-cell *matHeaderCellDef> Action </th>
           <td mat-cell *matCellDef="let element">
-            <button>Remove</button>
+              <button mat-mini-fab color="warn" matTooltip="Remove From Favorites" (click)="deleteFromFavourite(element)">
+                  <mat-icon aria-label="Example icon-button with a heart icon">remove</mat-icon>
+              </button>
           </td>
         </ng-container>
 
