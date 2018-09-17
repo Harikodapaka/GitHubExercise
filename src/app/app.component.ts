@@ -15,21 +15,24 @@ export class AppComponent implements OnInit {
   favouratesDataSource: any;
   displayedColumns: string[] = ['full_name', 'language', 'latest_tag', 'action'];
 
-  constructor(private appService: AppService, public dialog: MatDialog, public authService: AuthService) {
+  constructor(private appService: AppService,
+    public dialog: MatDialog,
+    public authService: AuthService) {
   }
   search = new FormControl('', [Validators.required]);
+  ngOnInit(): void {
+    this.authService.isUserLoggedIn() ? this.getFavoritesList() : this.showLoginWindow();
+  }
+  // This function open a material dialog to enter token
   showLoginWindow() {
     const dialogRef = this.dialog.open(LoginDialogComponent, {
       width: '25em',
       data: { 'token': '' }
     });
-
     dialogRef.afterClosed().subscribe(async result => {
       console.log('The dialog was closed');
-      console.log(result);
       if (result) {
         let userResponse = await this.authService.authenticateUser(result).toPromise() || { status: 200 };
-        console.log(userResponse);
         if (userResponse['status'] !== 401) {
           sessionStorage.setItem('user_token', result);
         } else {
@@ -39,15 +42,13 @@ export class AppComponent implements OnInit {
       }
     });
   }
-  ngOnInit(): void {
-    this.authService.isUserLoggedIn() ? this.getFavoritesList() : this.showLoginWindow();
-  }
+  // This function calls API to search the repos 
   async searchRepos() {
+    // checking the user is valid or not
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     if (!this.search.hasError('required')) {
       let allRepos = await this.appService.searchRepos(this.search.value).toPromise();
-      let topTenRepos = allRepos['items'].slice(0, 10);
-      topTenRepos.forEach(async repo => {
+      allRepos['items'].forEach(async repo => {
         let latestTag = await this.appService.getLatestVersion(repo.full_name).toPromise() || { 'status': '' };
         if (latestTag['status'] !== 404) {
           repo.latest_tag = latestTag['tag_name'];
@@ -59,24 +60,29 @@ export class AppComponent implements OnInit {
           repo.isStarredRepo = false;
         }
       });
-      this.dataSource = topTenRepos;
+      this.dataSource = allRepos['items'];
     }
   }
+  // Resets the form and table data
   resetrepos() {
     this.dataSource = "";
     this.search.reset();
   }
+  // This Function call the app service to add a specific repository to favourites...
   async addToFavourite(repo) {
+    // checking the user is valid or not
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     let favrepos = await this.appService.addToFavoritesList(repo.full_name).toPromise() || { 'status': '200' };
     if (favrepos['status'] !== 404) {
-      alert('success' + favrepos);
+      alert('Request Succeeded with code' + favrepos['status'] + '  Please refresh few munites later...');
+      this.getFavoritesList();
     } else {
-      repo.isStarredRepo = false;
-      alert('danger' + favrepos);
+      alert('Request not Succeeded and response code is -' + favrepos['status']);
     }
   }
+  // This Function call the app service to remove a specific repository from favourites...
   async deleteFromFavourite(repo) {
+    // checking the user is valid or not
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     let favrepos = await this.appService.removeFromFavoritesList(repo.full_name).toPromise() || { 'status': '200' };
     if (favrepos['status'] !== 404) {
@@ -87,6 +93,7 @@ export class AppComponent implements OnInit {
       alert('danger' + favrepos);
     }
   }
+  // getting the all starred repositories
   async getFavoritesList() {
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     this.favouratesDataSource = await this.appService.getFavoritesList().toPromise();

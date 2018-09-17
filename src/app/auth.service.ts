@@ -1,8 +1,8 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpHeaders, HttpErrorResponse, HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { AppComponent } from './app.component';
 
+// This service deals with autherization calls..
 @Injectable({
   providedIn: 'root'
 })
@@ -10,6 +10,7 @@ export class AuthService {
 
   constructor(private http: HttpClient) { }
 
+  // This function checks the user token is valid or not and returns status code.
   authenticateUser(token){
     let url = `https://api.github.com/user`;
     return this.http.get(url,{'headers':{
@@ -20,13 +21,15 @@ export class AuthService {
       return Observable.of(err as HttpErrorResponse);
     });
   }
+  // This function returns the token from session Storage
   getUserToken(){
     let token = sessionStorage.getItem('user_token');
     if(token) return token;
     sessionStorage.clear();
-    alert("Please Login!!");
+    //alert("Please Login!!");
     return "";
   }
+  // This function returns a boolean
   isUserLoggedIn(){
     let token = sessionStorage.getItem('user_token');
     if(token) return true;
