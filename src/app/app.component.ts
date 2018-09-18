@@ -4,6 +4,7 @@ import { FormControl, Validators } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { LoginDialogComponent } from './login-dialog/login-dialog.component';
 import { AuthService } from './auth.service';
+import { NotifierService } from 'angular-notifier';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,8 @@ export class AppComponent implements OnInit {
 
   constructor(private appService: AppService,
     public dialog: MatDialog,
-    public authService: AuthService) {
+    public authService: AuthService,
+    private notifier: NotifierService) {
   }
   search = new FormControl('', [Validators.required]);
   ngOnInit(): void {
@@ -35,13 +37,18 @@ export class AppComponent implements OnInit {
         let userResponse = await this.authService.authenticateUser(result).toPromise() || { status: 200 };
         if (userResponse['status'] !== 401) {
           sessionStorage.setItem('user_token', result);
+          this.showNotification('success','Login in successful');
         } else {
           sessionStorage.clear();
-          alert('Login not successfull...');
+          this.showNotification('error','Sorry, can not login. Enter valid token');
+
         }
       }
     });
   }
+  public showNotification( type: string, message: string ): void {
+		this.notifier.notify( type, message );
+	}
   // This function calls API to search the repos 
   async searchRepos() {
     // checking the user is valid or not
@@ -74,10 +81,10 @@ export class AppComponent implements OnInit {
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     let favrepos = await this.appService.addToFavoritesList(repo.full_name).toPromise() || { 'status': '200' };
     if (favrepos['status'] !== 404) {
-      alert('Request Succeeded with code' + favrepos['status'] + '  Please refresh few munites later...');
+      this.showNotification('success',`Request Succeeded with code ${favrepos['status']} Please refresh few seconds later...`);
       this.getFavoritesList();
     } else {
-      alert('Request not Succeeded and response code is -' + favrepos['status']);
+      this.showNotification('warning',`Request not Succeeded and response code is -  ${favrepos['status']}`);
     }
   }
   // This Function call the app service to remove a specific repository from favourites...
@@ -86,11 +93,11 @@ export class AppComponent implements OnInit {
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     let favrepos = await this.appService.removeFromFavoritesList(repo.full_name).toPromise() || { 'status': '200' };
     if (favrepos['status'] !== 404) {
-      alert('Request Succeeded with code' + favrepos['status'] + '  Please refresh few munites later...')
+      this.showNotification('success',`Request Succeeded with code ${favrepos['status']} Please refresh few seconds later...`);
       this.getFavoritesList();
     } else {
       repo.isStarredRepo = false;
-      alert('danger' + favrepos);
+      this.showNotification('warning',`Request not Succeeded and response code is -  ${favrepos['status']}`);
     }
   }
   // getting the all starred repositories
