@@ -37,24 +37,25 @@ export class AppComponent implements OnInit {
         let userResponse = await this.authService.authenticateUser(result).toPromise() || { status: 200 };
         if (userResponse['status'] !== 401) {
           sessionStorage.setItem('user_token', result);
-          this.showNotification('success','Login in successful');
+          this.showNotification('success', 'Login in successful');
         } else {
           sessionStorage.clear();
-          this.showNotification('error','Sorry, can not login. Enter valid token');
+          this.showNotification('error', 'Sorry, can not login. Enter valid token');
 
         }
       }
     });
   }
-  public showNotification( type: string, message: string ): void {
-		this.notifier.notify( type, message );
-	}
+  public showNotification(type: string, message: string): void {
+    this.notifier.notify(type, message);
+  }
   // This function calls API to search the repos 
   async searchRepos() {
     // checking the user is valid or not
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     if (!this.search.hasError('required')) {
       let allRepos = await this.appService.searchRepos(this.search.value).toPromise();
+      // looping through all repositories and checking the latest tag and is alreadey favorite or no 
       allRepos['items'].forEach(async repo => {
         let latestTag = await this.appService.getLatestVersion(repo.full_name).toPromise() || { 'status': '' };
         if (latestTag['status'] !== 404) {
@@ -81,10 +82,13 @@ export class AppComponent implements OnInit {
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     let favrepos = await this.appService.addToFavoritesList(repo.full_name).toPromise() || { 'status': '200' };
     if (favrepos['status'] !== 404) {
-      this.showNotification('success',`Request Succeeded with code ${favrepos['status']} Please refresh few seconds later...`);
+      this.showNotification('success', `Request Succeeded with code ${favrepos['status']}!!`);
+      this.dataSource.forEach((ele) => {
+        if(ele.full_name === repo.full_name){ ele.isStarredRepo = true;}
+      });
       this.getFavoritesList();
     } else {
-      this.showNotification('warning',`Request not Succeeded and response code is -  ${favrepos['status']}`);
+      this.showNotification('warning', `Request not Succeeded and response code is -  ${favrepos['status']}`);
     }
   }
   // This Function call the app service to remove a specific repository from favourites...
@@ -93,16 +97,25 @@ export class AppComponent implements OnInit {
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     let favrepos = await this.appService.removeFromFavoritesList(repo.full_name).toPromise() || { 'status': '200' };
     if (favrepos['status'] !== 404) {
-      this.showNotification('success',`Request Succeeded with code ${favrepos['status']} Please refresh few seconds later...`);
+      this.showNotification('success', `Request Succeeded with code ${favrepos['status']}!!`);
       this.getFavoritesList();
     } else {
       repo.isStarredRepo = false;
-      this.showNotification('warning',`Request not Succeeded and response code is -  ${favrepos['status']}`);
+      this.showNotification('warning', `Request not Succeeded and response code is -  ${favrepos['status']}`);
     }
   }
   // getting the all starred repositories
   async getFavoritesList() {
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
-    this.favouratesDataSource = await this.appService.getFavoritesList().toPromise();
+    let allRepos: any = await this.appService.getFavoritesList().toPromise();
+    if(allRepos){
+      allRepos.forEach(async repo => {
+        let latestTag = await this.appService.getLatestVersion(repo.full_name).toPromise() || { 'status': '' };
+        if (latestTag['status'] !== 404) {
+          repo.latest_tag = latestTag['tag_name'];
+        }
+      });
+      this.favouratesDataSource = allRepos;
+    }
   }
 }
