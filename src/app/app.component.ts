@@ -37,7 +37,7 @@ export class AppComponent implements OnInit {
         let userResponse = await this.authService.authenticateUser(result).toPromise() || { status: 200 };
         if (userResponse['status'] !== 401) {
           sessionStorage.setItem('user_token', result);
-          this.showNotification('success', 'Login in successful');
+          this.showNotification('success', 'Login successful');
         } else {
           sessionStorage.clear();
           this.showNotification('error', 'Sorry, can not login. Enter valid token');
@@ -82,13 +82,13 @@ export class AppComponent implements OnInit {
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     let favrepos = await this.appService.addToFavoritesList(repo.full_name).toPromise() || { 'status': '200' };
     if (favrepos['status'] !== 404) {
-      this.showNotification('success', `Request Succeeded with code ${favrepos['status']}!!`);
+      this.showNotification('success', `Request succeeded with code ${favrepos['status']}!!`);
       this.dataSource.forEach((ele) => {
         if(ele.full_name === repo.full_name){ ele.isStarredRepo = true;}
       });
       this.getFavoritesList();
     } else {
-      this.showNotification('warning', `Request not Succeeded and response code is -  ${favrepos['status']}`);
+      this.showNotification('warning', `Request not succeeded and response code is -  ${favrepos['status']}`);
     }
   }
   // This Function call the app service to remove a specific repository from favourites...
@@ -97,11 +97,11 @@ export class AppComponent implements OnInit {
     if (!this.authService.isUserLoggedIn()) { this.showLoginWindow(); return; }
     let favrepos = await this.appService.removeFromFavoritesList(repo.full_name).toPromise() || { 'status': '200' };
     if (favrepos['status'] !== 404) {
-      this.showNotification('success', `Request Succeeded with code ${favrepos['status']}!!`);
+      this.showNotification('success', `Request succeeded with code ${favrepos['status']}!!`);
       this.getFavoritesList();
     } else {
       repo.isStarredRepo = false;
-      this.showNotification('warning', `Request not Succeeded and response code is -  ${favrepos['status']}`);
+      this.showNotification('warning', `Request not succeeded and response code is -  ${favrepos['status']}`);
     }
   }
   // getting the all starred repositories
