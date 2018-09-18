@@ -1,3 +1,7 @@
+# Demo
+You can play around with this application here [github-favorites](https://github-favorites.netlify.com/)
+
+
 # GitHubExercise
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 6.2.2.
